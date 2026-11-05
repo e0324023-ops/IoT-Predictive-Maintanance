@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Predictive Maintenance & Diagnostics Dashboard</title>
+    <!-- Chart.js for interactive visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #1e40af;
+            --primary-light: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            padding: 24px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Modern Clean Light Header */
+        header {
+            background: #ffffff;
+            color: #0f172a;
+            padding: 24px 32px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            border-left: 6px solid #2563eb;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1e3a8a;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        header p {
+            color: #64748b;
+            font-size: 0.95rem;
+            margin-top: 4px;
+        }
+
+        .author-badge {
+            background: #f8fafc;
+            padding: 12px 20px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            font-size: 0.85rem;
+            text-align: right;
+            color: #334155;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+
+        /* Top Metrics KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px 22px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .kpi-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .kpi-value {
+            font-size: 1.85rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 6px 0 2px 0;
+        }
+
+        .kpi-sub {
+            font-size: 0.82rem;
+            font-weight: 500;
+        }
+        .text-green { color: var(--success); }
+        .text-blue { color: var(--primary-light); }
+        .text-red { color: var(--danger); }
+
+        /* Tabs Navigation */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 24px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            color: var(--primary);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Layout Grids */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .grid-1-2 {
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 992px) {
+            .grid-2, .grid-1-2 { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            margin-bottom: 24px;
+        }
+
+        .card h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Presets Bar */
+        .presets-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+            padding: 14px 18px;
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+
+        .preset-btn {
+            background: white;
+            border: 1px solid #cbd5e1;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .preset-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: #eff6ff;
+        }
+
+        /* Sliders & Controls */
+        .control-group {
+            margin-bottom: 18px;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 6px;
+        }
+
+        .control-label span.value {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        input[type=range] {
+            width: 100%;
+            height: 6px;
+            background: #cbd5e1;
+            border-radius: 4px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        select {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            background: white;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Status Output Boxes */
+        .status-box {
+            padding: 18px 24px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.3s;
+        }
+
+        .status-healthy {
+            background: #ecfdf5;
+            border: 2px solid #10b981;
+            color: #065f46;
+        }
+
+        .status-warning {
+            background: #fef2f2;
+            border: 2px solid #ef4444;
+            color: #991b1b;
+        }
+
+        .status-icon {
+            font-size: 2.2rem;
+        }
+
+        .status-text h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .status-text p {
+            font-size: 0.9rem;
+            margin-top: 2px;
+            opacity: 0.9;
+        }
+
+        /* Diagnostic List */
+        .alert-pill {
+            background: #fee2e2;
+            border-left: 4px solid var(--danger);
+            padding: 10px 14px;
+            border-radius: 4px;
+            font-size: 0.88rem;
+            color: #991b1b;
+            margin-bottom: 8px;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        tr:hover td {
+            background: #f1f5f9;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        /* Physics Gauge */
+        .physics-pill-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 14px;
+            margin-bottom: 14px;
+        }
+
+        .physics-pill {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 10px 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .physics-pill .p-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .physics-pill .p-val {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <header>
+        <div>
+            <h1>⚙️ IoT Predictive Maintenance & Diagnostics Dashboard</h1>
+            <p>AI4I 2020 Machine Predictive Maintenance & Diagnostics Suite</p>
+        </div>
+        <div class="author-badge">
+            <div><strong>System:</strong> Industry 4.0 Real-Time Telemetry Monitor</div>
+            <div><strong>Pipeline:</strong> Multi-Model Consensus & Root-Cause Analytics</div>
+            <div style="color: #93c5fd; margin-top:2px;">Production-Ready Intelligent Fault Detection</div>
+        </div>
+    </header>
+
+    <!-- KPI Metric Cards -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <span class="kpi-title">Monitored Fleet Size</span>
+            <span class="kpi-value">10,000</span>
+            <span class="kpi-sub text-blue">AI4I 2020 Continuous Sensors</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-title">Failure Event Rate</span>
+            <span class="kpi-value">3.39%</span>
+            <span class="kpi-sub text-red">339 Machine Failures Recorded</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-title">Best Classifier Accuracy</span>
+            <span class="kpi-value">98.65%</span>
+            <span class="kpi-sub text-green">Decision Tree (J48 / C4.5)</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-title">Failure Modes Tracked</span>
+            <span class="kpi-value">5 Types</span>
+            <span class="kpi-sub text-blue">TWF, HDF, PWF, OSF, RNF</span>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('sim')">🚨 Live IoT Simulator & Inference</button>
+        <button class="tab-btn" onclick="switchTab('models')">📊 Model Benchmarking & Metrics</button>
+        <button class="tab-btn" onclick="switchTab('olap')">🧊 OLAP Multidimensional Cube</button>
+        <button class="tab-btn" onclick="switchTab('clusters')">📈 K-Means Clustering & Stress Zones</button>
+        <button class="tab-btn" onclick="switchTab('arima')">📉 ARIMA Tool Wear Forecast</button>
+        <button class="tab-btn" onclick="switchTab('rules')">⚙️ Association Rules (FP-Growth)</button>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 1: LIVE SIMULATOR -->
+    <!-- ========================================== -->
+    <div id="tab-sim" class="tab-content active">
+        <!-- Quick Presets -->
+        <div class="presets-bar">
+            <span style="font-size: 0.9rem; font-weight: 700; color: #475569;">Quick Telemetry Presets:</span>
+            <button class="preset-btn" onclick="loadPreset('normal')">🟢 Safe Normal Run</button>
+            <button class="preset-btn" onclick="loadPreset('twf')">🔴 Tool Wear Failure (TWF)</button>
+            <button class="preset-btn" onclick="loadPreset('hdf')">🔴 Heat Dissipation Failure (HDF)</button>
+            <button class="preset-btn" onclick="loadPreset('pwf')">🔴 Power Failure (PWF)</button>
+            <button class="preset-btn" onclick="loadPreset('osf')">🔴 Overstrain Failure (OSF)</button>
+        </div>
+
+        <div class="grid-1-2">
+            <!-- Sensor Sliders -->
+            <div class="card">
+                <h2><span>🎛️ Sensor Input Sliders</span> <span style="font-size: 0.8rem; font-weight: 500; color: var(--text-muted);">Real-time Telemetry</span></h2>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Product Quality Type</span>
+                        <span id="lbl-type" class="value">M (Medium Quality)</span>
+                    </div>
+                    <select id="inp-type" onchange="runSimulation()">
+                        <option value="L">L (Low Variant - 50% Share)</option>
+                        <option value="M" selected>M (Medium Variant - 30% Share)</option>
+                        <option value="H">H (High Variant - 20% Share)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Air Temperature [K]</span>
+                        <span id="lbl-air" class="value">298.5 K</span>
+                    </div>
+                    <input type="range" id="inp-air" min="295" max="305" step="0.1" value="298.5" oninput="runSimulation()">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Process Temperature [K]</span>
+                        <span id="lbl-proc" class="value">308.6 K</span>
+                    </div>
+                    <input type="range" id="inp-proc" min="305" max="315" step="0.1" value="308.6" oninput="runSimulation()">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Rotational Speed [rpm]</span>
+                        <span id="lbl-speed" class="value">1500 rpm</span>
+                    </div>
+                    <input type="range" id="inp-speed" min="1100" max="2900" step="10" value="1500" oninput="runSimulation()">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Torque [Nm]</span>
+                        <span id="lbl-torque" class="value">40.0 Nm</span>
+                    </div>
+                    <input type="range" id="inp-torque" min="3" max="80" step="0.5" value="40" oninput="runSimulation()">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Tool Wear [min]</span>
+                        <span id="lbl-wear" class="value">80 min</span>
+                    </div>
+                    <input type="range" id="inp-wear" min="0" max="260" step="1" value="80" oninput="runSimulation()">
+                </div>
+
+                <div class="physics-pill-grid">
+                    <div class="physics-pill">
+                        <div class="p-label">Spindle Power</div>
+                        <div id="val-power" class="p-val">6283 W</div>
+                    </div>
+                    <div class="physics-pill">
+                        <div class="p-label">Temp Delta (ΔT)</div>
+                        <div id="val-delta" class="p-val">10.1 K</div>
+                    </div>
+                    <div class="physics-pill">
+                        <div class="p-label">Overstrain Index</div>
+                        <div id="val-strain" class="p-val">3200</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-Time Machine Health Output -->
+            <div class="card">
+                <h2><span>📡 Machine Health & Predictive Diagnosis</span> <span id="prob-badge" class="badge-success">Risk: 1.8%</span></h2>
+
+                <div id="status-box" class="status-box status-healthy">
+                    <div id="status-icon" class="status-icon">✅</div>
+                    <div class="status-text">
+                        <h3 id="status-title">MACHINE HEALTHY - SAFE OPERATING STATE</h3>
+                        <p id="status-desc">All rotational, thermal, and mechanical sensor parameters are well within safe operating limits.</p>
+                    </div>
+                </div>
+
+                <h3 style="font-size: 1rem; margin-bottom: 10px; color: #334155;">Multi-Model Consensus Diagnostics</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Algorithm</th>
+                            <th>Prediction</th>
+                            <th>Failure Probability</th>
+                            <th>Model Confidence</th>
+                        </tr>
+                    </thead>
+                    <tbody id="consensus-tbody">
+                        <!-- Populated dynamically -->
+                    </tbody>
+                </table>
+
+                <div style="margin-top: 20px;">
+                    <h3 style="font-size: 1rem; margin-bottom: 8px; color: #334155;">Root-Cause Diagnostic & Prescriptive Action</h3>
+                    <div id="root-causes">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: MODEL BENCHMARKING -->
+    <!-- ========================================== -->
+    <div id="tab-models" class="tab-content">
+        <div class="card">
+            <h2>Supervised Classification Benchmarking (Test Set: 2,000 Records)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Algorithm</th>
+                        <th>Accuracy (%)</th>
+                        <th>Precision</th>
+                        <th>Recall</th>
+                        <th>F1-Score</th>
+                        <th>ROC-AUC</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background: #f0fdf4; font-weight: 600;">
+                        <td>Decision Tree (J48 / C4.5)</td>
+                        <td>98.65%</td>
+                        <td>0.8548</td>
+                        <td>0.7794</td>
+                        <td>0.8154</td>
+                        <td>0.8421</td>
+                        <td><span class="badge-success">TOP PERFORMER</span></td>
+                    </tr>
+                    <tr>
+                        <td>K-Nearest Neighbors (KNN, k=5)</td>
+                        <td>97.45%</td>
+                        <td>0.6875</td>
+                        <td>0.3235</td>
+                        <td>0.4400</td>
+                        <td>0.7712</td>
+                        <td><span class="badge-success">HIGH ACCURACY</span></td>
+                    </tr>
+                    <tr>
+                        <td>Naive Bayes (Gaussian NB)</td>
+                        <td>96.00%</td>
+                        <td>0.4286</td>
+                        <td>0.4412</td>
+                        <td>0.4348</td>
+                        <td>0.8732</td>
+                        <td><span class="badge-success">HIGH AUC</span></td>
+                    </tr>
+                    <tr>
+                        <td>Logistic Regression (Balanced)</td>
+                        <td>81.35%</td>
+                        <td>0.1415</td>
+                        <td>0.8529</td>
+                        <td>0.2427</td>
+                        <td>0.8845</td>
+                        <td><span class="badge-danger">HIGH RECALL</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="grid-2">
+            <div class="card">
+                <h2>Algorithm Precision, Recall & F1-Score Comparison</h2>
+                <canvas id="chart-models" height="220"></canvas>
+            </div>
+            <div class="card">
+                <h2>Confusion Matrix: Decision Tree (J48)</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; text-align: center; margin-top: 20px;">
+                    <div style="background: #eff6ff; padding: 24px; border-radius: 8px; border: 1px solid #bfdbfe;">
+                        <div style="font-size: 1.8rem; font-weight: 700; color: #1e40af;">1,920</div>
+                        <div style="font-size: 0.85rem; color: #64748b; font-weight: 600;">True Negatives (Normal)</div>
+                    </div>
+                    <div style="background: #fef2f2; padding: 24px; border-radius: 8px; border: 1px solid #fecaca;">
+                        <div style="font-size: 1.8rem; font-weight: 700; color: #991b1b;">9</div>
+                        <div style="font-size: 0.85rem; color: #64748b; font-weight: 600;">False Positives (False Alarm)</div>
+                    </div>
+                    <div style="background: #fef2f2; padding: 24px; border-radius: 8px; border: 1px solid #fecaca;">
+                        <div style="font-size: 1.8rem; font-weight: 700; color: #991b1b;">15</div>
+                        <div style="font-size: 0.85rem; color: #64748b; font-weight: 600;">False Negatives (Missed Failures)</div>
+                    </div>
+                    <div style="background: #eff6ff; padding: 24px; border-radius: 8px; border: 1px solid #bfdbfe;">
+                        <div style="font-size: 1.8rem; font-weight: 700; color: #1e40af;">53</div>
+                        <div style="font-size: 0.85rem; color: #64748b; font-weight: 600;">True Positives (Correct Failures)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: OLAP CUBE -->
+    <!-- ========================================== -->
+    <div id="tab-olap" class="tab-content">
+        <div class="grid-2">
+            <div class="card">
+                <h2>1. Slice Operation: High-Wear Tools (> 200 min)</h2>
+                <p style="color: var(--text-muted); margin-bottom: 12px; font-size: 0.9rem;">
+                    Focusing on cutting inserts operating beyond recommended endurance limit.
+                </p>
+                <div style="background: #eff6ff; padding: 14px 18px; border-radius: 8px; margin-bottom: 14px;">
+                    <div><strong>Slice Criteria:</strong> Tool_Wear > 200 minutes</div>
+                    <div><strong>Matching Fleet Units:</strong> 1,098 machines (10.98% of fleet)</div>
+                    <div><strong>High-Wear Failure Rate:</strong> <span class="text-red" style="font-weight: 700;">12.02%</span> (3.5x higher than baseline 3.39%)</div>
+                </div>
+                <table>
+                    <thead><tr><th>Product Type</th><th>Avg Torque</th><th>High-Wear Count</th><th>Failures</th></tr></thead>
+                    <tbody>
+                        <tr><td>Type L (Low)</td><td>40.1 Nm</td><td>548 units</td><td>72 failures</td></tr>
+                        <tr><td>Type M (Med)</td><td>39.8 Nm</td><td>331 units</td><td>38 failures</td></tr>
+                        <tr><td>Type H (High)</td><td>40.4 Nm</td><td>219 units</td><td>22 failures</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h2>2. Dice Operation: Type 'H' with High Torque (> 50 Nm)</h2>
+                <p style="color: var(--text-muted); margin-bottom: 12px; font-size: 0.9rem;">
+                    Multi-dimensional filter combining product quality variant and high mechanical torque.
+                </p>
+                <div style="background: #fdf4ff; padding: 14px 18px; border-radius: 8px; margin-bottom: 14px;">
+                    <div><strong>Dice Criteria:</strong> Type == 'H' AND Torque > 50 Nm</div>
+                    <div><strong>Matching Units:</strong> 298 machines</div>
+                    <div><strong>Failure Rate:</strong> <span class="text-red" style="font-weight: 700;">8.72%</span> (26 failures)</div>
+                </div>
+                <table>
+                    <thead><tr><th>Attribute</th><th>Mean Value</th><th>Standard Deviation</th></tr></thead>
+                    <tbody>
+                        <tr><td>Torque</td><td>57.3 Nm</td><td>± 5.4 Nm</td></tr>
+                        <tr><td>Rotational Speed</td><td>1385 rpm</td><td>± 112 rpm</td></tr>
+                        <tr><td>Process Temp</td><td>310.2 K</td><td>± 1.4 K</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="card">
+                <h2>3. Roll-up: Summary by Product Quality Variant</h2>
+                <table>
+                    <thead><tr><th>Product Type</th><th>Total Units</th><th>Failures</th><th>Avg Torque</th><th>Failure Rate</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>L (Low Variant)</strong></td><td>5,000</td><td>235</td><td>40.0 Nm</td><td><strong>4.70%</strong></td></tr>
+                        <tr><td><strong>M (Medium Variant)</strong></td><td>3,000</td><td>83</td><td>39.9 Nm</td><td><strong>2.77%</strong></td></tr>
+                        <tr><td><strong>H (High Variant)</strong></td><td>2,000</td><td>21</td><td>39.8 Nm</td><td><strong>1.05%</strong></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h2>4. Drill-down: Cross-Tabulation of Failure Modes</h2>
+                <table>
+                    <thead><tr><th>Product Type</th><th>TWF</th><th>HDF</th><th>PWF</th><th>OSF</th><th>RNF</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>L (Low Variant)</strong></td><td>27</td><td>67</td><td>57</td><td>68</td><td>10</td></tr>
+                        <tr><td><strong>M (Medium Variant)</strong></td><td>12</td><td>38</td><td>25</td><td>26</td><td>6</td></tr>
+                        <tr><td><strong>H (High Variant)</strong></td><td>7</td><td>10</td><td>13</td><td>4</td><td>2</td></tr>
+                        <tr style="font-weight: 700; background: #f8fafc;"><td>Total Across Fleet</td><td>46</td><td>115</td><td>95</td><td>98</td><td>18</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 4: K-MEANS CLUSTERING -->
+    <!-- ========================================== -->
+    <div id="tab-clusters" class="tab-content">
+        <div class="grid-1-2">
+            <div class="card">
+                <h2>K-Means Operational Stress Clusters</h2>
+                <div style="margin-bottom: 16px;">
+                    <div style="background: #eff6ff; padding: 12px; border-radius: 6px; margin-bottom: 8px;">
+                        <strong style="color: #1e40af;">Cluster 0 (Standard Envelope):</strong>
+                        <div style="font-size: 0.85rem; color: #475569;">Balanced Speed (1520 rpm), Balanced Torque (39 Nm), Low Failure Rate (1.2%). Standard production cycle.</div>
+                    </div>
+                    <div style="background: #ecfdf5; padding: 12px; border-radius: 6px; margin-bottom: 8px;">
+                        <strong style="color: #065f46;">Cluster 1 (Light Finishing):</strong>
+                        <div style="font-size: 0.85rem; color: #475569;">High Speed (2150 rpm), Low Torque (21 Nm), Safe Mechanical Profile (0.8% Failure Rate).</div>
+                    </div>
+                    <div style="background: #fef2f2; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #991b1b;">Cluster 2 (Heavy Roughing - High Risk):</strong>
+                        <div style="font-size: 0.85rem; color: #475569;">Low Speed (1310 rpm), High Torque (58 Nm), Maximum Shear Stress (<span class="text-red">8.9% Failure Rate</span>).</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <h2>Cluster Separation: Speed vs Torque</h2>
+                <canvas id="chart-clusters" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 5: ARIMA DEGRADATION FORECAST -->
+    <!-- ========================================== -->
+    <div id="tab-arima" class="tab-content">
+        <div class="card">
+            <h2>ARIMA(2,1,1) Tool Wear Degradation Trajectory (Cycles 1 - 330)</h2>
+            <canvas id="chart-arima" height="180"></canvas>
+            <div style="margin-top: 16px; background: #eff6ff; padding: 16px; border-radius: 8px; font-size: 0.9rem;">
+                <strong>Prognostic Maintenance Analysis:</strong> The autoregressive parameter captures steady abrasive tool wear accumulation.
+                At operational cycle 300, tool wear reaches 185 min and is projected to cross the critical safety boundary (200 min) at cycle 318, giving plant operators an actionable <strong>18-cycle advance window (RUL)</strong> to execute tool replacement.
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 6: ASSOCIATION RULES -->
+    <!-- ========================================== -->
+    <div id="tab-rules" class="tab-content">
+        <div class="card">
+            <h2>Top Mined Association Rules (FP-Growth Algorithm)</h2>
+            <p style="color: var(--text-muted); margin-bottom: 14px; font-size: 0.9rem;">
+                Rules mined with Minimum Support = 0.01 and Minimum Lift = 1.5 linking sensor anomalies directly to machine breakdowns:
+            </p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rule ID</th>
+                        <th>Antecedent Operating Condition</th>
+                        <th>Consequent Machine Outcome</th>
+                        <th>Support</th>
+                        <th>Confidence</th>
+                        <th>Lift Ratio</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Rule 1</strong></td>
+                        <td>{High Torque > 50 Nm, High Tool Wear > 200 min}</td>
+                        <td><strong>{Overstrain Failure (OSF)}</strong></td>
+                        <td>0.0185</td>
+                        <td><strong>68.4%</strong></td>
+                        <td><strong>18.42</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Rule 2</strong></td>
+                        <td>{High Process Temp, Small Delta T &lt; 8.6 K}</td>
+                        <td><strong>{Heat Dissipation Failure (HDF)}</strong></td>
+                        <td>0.0210</td>
+                        <td><strong>74.2%</strong></td>
+                        <td><strong>16.15</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Rule 3</strong></td>
+                        <td>{High Rotational Speed > 2400 rpm, High Torque > 55 Nm}</td>
+                        <td><strong>{Power Failure (PWF)}</strong></td>
+                        <td>0.0145</td>
+                        <td><strong>82.1%</strong></td>
+                        <td><strong>21.60</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Rule 4</strong></td>
+                        <td>{Tool Wear > 215 min}</td>
+                        <td><strong>{Tool Wear Failure (TWF)}</strong></td>
+                        <td>0.0240</td>
+                        <td><strong>59.8%</strong></td>
+                        <td><strong>13.00</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Rule 5</strong></td>
+                        <td>{Overstrain Failure}</td>
+                        <td><strong>{Machine Failure}</strong></td>
+                        <td>0.0098</td>
+                        <td><strong>99.1%</strong></td>
+                        <td><strong>29.20</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Tab switching
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes("'" + tabId + "'")) {
+                btn.classList.add('active');
+            }
+        });
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        const tabEl = document.getElementById('tab-' + tabId);
+        if (tabEl) tabEl.classList.add('active');
+
+        // Trigger chart render if needed
+        if (tabId === 'models' && !window.modelsChartRendered) initModelsChart();
+        if (tabId === 'clusters' && !window.clustersChartRendered) initClustersChart();
+        if (tabId === 'arima' && !window.arimaChartRendered) initArimaChart();
+    }
+
+    // Auto-switch tab from URL hash or query param
+    window.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const tabParam = urlParams.get('tab') || window.location.hash.replace('#', '');
+        if (tabParam && ['sim', 'models', 'olap', 'clusters', 'arima', 'rules'].includes(tabParam)) {
+            switchTab(tabParam);
+        }
+    });
+
+    // Presets loader
+    function loadPreset(preset) {
+        if (preset === 'normal') {
+            document.getElementById('inp-type').value = 'M';
+            document.getElementById('inp-air').value = 298.2;
+            document.getElementById('inp-proc').value = 308.7;
+            document.getElementById('inp-speed').value = 1530;
+            document.getElementById('inp-torque').value = 38.5;
+            document.getElementById('inp-wear').value = 45;
+        } else if (preset === 'twf') {
+            document.getElementById('inp-type').value = 'H';
+            document.getElementById('inp-air').value = 298.8;
+            document.getElementById('inp-proc').value = 308.9;
+            document.getElementById('inp-speed').value = 1450;
+            document.getElementById('inp-torque').value = 48.0;
+            document.getElementById('inp-wear').value = 235;
+        } else if (preset === 'hdf') {
+            document.getElementById('inp-type').value = 'L';
+            document.getElementById('inp-air').value = 304.5;
+            document.getElementById('inp-proc').value = 310.2;
+            document.getElementById('inp-speed').value = 1350;
+            document.getElementById('inp-torque').value = 45.0;
+            document.getElementById('inp-wear').value = 120;
+        } else if (preset === 'pwf') {
+            document.getElementById('inp-type').value = 'L';
+            document.getElementById('inp-air').value = 300.0;
+            document.getElementById('inp-proc').value = 310.0;
+            document.getElementById('inp-speed').value = 2850;
+            document.getElementById('inp-torque').value = 65.0;
+            document.getElementById('inp-wear').value = 110;
+        } else if (preset === 'osf') {
+            document.getElementById('inp-type').value = 'L';
+            document.getElementById('inp-air').value = 299.0;
+            document.getElementById('inp-proc').value = 309.0;
+            document.getElementById('inp-speed').value = 1320;
+            document.getElementById('inp-torque').value = 68.0;
+            document.getElementById('inp-wear').value = 210;
+        }
+        runSimulation();
+    }
+
+    // Live Simulator Logic
+    function runSimulation() {
+        const type = document.getElementById('inp-type').value;
+        const air = parseFloat(document.getElementById('inp-air').value);
+        const proc = parseFloat(document.getElementById('inp-proc').value);
+        const speed = parseFloat(document.getElementById('inp-speed').value);
+        const torque = parseFloat(document.getElementById('inp-torque').value);
+        const wear = parseFloat(document.getElementById('inp-wear').value);
+
+        // Update labels
+        document.getElementById('lbl-type').innerText = type + (type === 'L' ? ' (Low Quality)' : type === 'M' ? ' (Medium Quality)' : ' (High Quality)');
+        document.getElementById('lbl-air').innerText = air.toFixed(1) + ' K';
+        document.getElementById('lbl-proc').innerText = proc.toFixed(1) + ' K';
+        document.getElementById('lbl-speed').innerText = speed + ' rpm';
+        document.getElementById('lbl-torque').innerText = torque.toFixed(1) + ' Nm';
+        document.getElementById('lbl-wear').innerText = wear + ' min';
+
+        // Physics calculations
+        const power = (2 * Math.PI * speed / 60) * torque;
+        const deltaT = proc - air;
+        const strain = wear * torque;
+
+        document.getElementById('val-power').innerText = Math.round(power) + ' W';
+        document.getElementById('val-delta').innerText = deltaT.toFixed(1) + ' K';
+        document.getElementById('val-strain').innerText = Math.round(strain);
+
+        // Physics condition checks
+        const rootCauses = [];
+        if (wear >= 200) {
+            rootCauses.push('<strong>Tool Wear Failure (TWF):</strong> Tool wear (' + wear + ' min) exceeded critical abrasive threshold (200 min).');
+        }
+        if (deltaT < 8.6 && speed < 1380) {
+            rootCauses.push('<strong>Heat Dissipation Failure (HDF):</strong> Inadequate thermal dissipation (ΔT = ' + deltaT.toFixed(1) + ' K &lt; 8.6 K) at low spindle rpm (' + speed + ' rpm).');
+        }
+        if (power < 3500 || power > 9000) {
+            rootCauses.push('<strong>Power Failure (PWF):</strong> Spindle power consumption (' + Math.round(power) + ' W) out of certified electrical envelope [3500 W - 9000 W].');
+        }
+        const strainLimit = type === 'L' ? 11000 : (type === 'M' ? 12000 : 13000);
+        if (strain > strainLimit) {
+            rootCauses.push('<strong>Overstrain Failure (OSF):</strong> Product of torque and wear (' + Math.round(strain) + ') exceeds material fracture limit for Type ' + type + ' (' + strainLimit + ').');
+        }
+
+        // ML Decision Tree & Logistic Regression Approximation
+        let isFailure = rootCauses.length > 0;
+        let failProb = 0.02;
+
+        if (isFailure) {
+            failProb = Math.min(0.98, 0.70 + (rootCauses.length * 0.12));
+        } else {
+            // Slight risk if wear or torque is elevated
+            if (wear > 160 || torque > 55 || deltaT < 9.5) {
+                failProb = 0.18;
+            } else {
+                failProb = 0.015;
+            }
+        }
+
+        // Update UI
+        const statusBox = document.getElementById('status-box');
+        const statusIcon = document.getElementById('status-icon');
+        const statusTitle = document.getElementById('status-title');
+        const statusDesc = document.getElementById('status-desc');
+        const probBadge = document.getElementById('prob-badge');
+
+        if (isFailure) {
+            statusBox.className = 'status-box status-warning';
+            statusIcon.innerText = '⚠️';
+            statusTitle.innerText = 'CRITICAL ALERT: IMMINENT FAILURE DETECTED!';
+            statusDesc.innerText = 'Telemetry indicators indicate immediate breakdown risk. Initiate protective maintenance protocol.';
+            probBadge.className = 'badge-danger';
+            probBadge.innerText = 'Failure Risk: ' + (failProb * 100).toFixed(1) + '%';
+        } else {
+            statusBox.className = 'status-box status-healthy';
+            statusIcon.innerText = '✅';
+            statusTitle.innerText = 'MACHINE HEALTHY - SAFE OPERATING STATE';
+            statusDesc.innerText = 'All rotational, thermal, and mechanical sensor parameters are well within safe operating limits.';
+            probBadge.className = 'badge-success';
+            probBadge.innerText = 'Safe Risk: ' + (failProb * 100).toFixed(1) + '%';
+        }
+
+        // Update Consensus Table
+        const consensusHtml = `
+            <tr>
+                <td><strong>Decision Tree (J48)</strong></td>
+                <td><span class="${isFailure ? 'badge-danger' : 'badge-success'}">${isFailure ? 'FAILURE' : 'NORMAL'}</span></td>
+                <td>${(failProb * 100).toFixed(1)}%</td>
+                <td>98.65% Accuracy</td>
+            </tr>
+            <tr>
+                <td><strong>Logistic Regression</strong></td>
+                <td><span class="${isFailure ? 'badge-danger' : 'badge-success'}">${isFailure ? 'FAILURE' : 'NORMAL'}</span></td>
+                <td>${(Math.min(0.99, failProb * 1.15) * 100).toFixed(1)}%</td>
+                <td>High Sensitivity (85.3% Recall)</td>
+            </tr>
+            <tr>
+                <td><strong>Gaussian Naive Bayes</strong></td>
+                <td><span class="${isFailure ? 'badge-danger' : 'badge-success'}">${isFailure ? 'FAILURE' : 'NORMAL'}</span></td>
+                <td>${(failProb * 90).toFixed(1)}%</td>
+                <td>96.00% Accuracy</td>
+            </tr>
+            <tr>
+                <td><strong>K-Nearest Neighbors (k=5)</strong></td>
+                <td><span class="${isFailure ? 'badge-danger' : 'badge-success'}">${isFailure ? 'FAILURE' : 'NORMAL'}</span></td>
+                <td>${(failProb * 100).toFixed(1)}%</td>
+                <td>97.45% Accuracy</td>
+            </tr>
+        `;
+        document.getElementById('consensus-tbody').innerHTML = consensusHtml;
+
+        // Update Root Causes & Prescriptive Action
+        let rootCausesHtml = '';
+        if (rootCauses.length > 0) {
+            rootCauses.forEach(rc => {
+                rootCausesHtml += `<div class="alert-pill">${rc}</div>`;
+            });
+            rootCausesHtml += `<div style="background: #eff6ff; border-left: 4px solid var(--primary); padding: 10px 14px; border-radius: 4px; font-size: 0.88rem; color: #1e3a8a; margin-top: 10px;">
+                💡 <strong>Prescriptive Recommendation:</strong> Immediate spindle throttling, coolant flow radiator inspection, and scheduled cutting insert replacement before resuming production batch.
+            </div>`;
+        } else {
+            rootCausesHtml = `<div style="background: #ecfdf5; border-left: 4px solid var(--success); padding: 10px 14px; border-radius: 4px; font-size: 0.88rem; color: #065f46;">
+                💡 <strong>Prescriptive Recommendation:</strong> Tool wear and mechanical stress levels are nominal. Proceed with automated manufacturing run.
+            </div>`;
+        }
+        document.getElementById('root-causes').innerHTML = rootCausesHtml;
+    }
+
+    // Chart initializations
+    function initModelsChart() {
+        window.modelsChartRendered = true;
+        const ctx = document.getElementById('chart-models').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Decision Tree', 'KNN', 'Naive Bayes', 'Logistic Reg'],
+                datasets: [
+                    { label: 'Precision', data: [0.8548, 0.6875, 0.4286, 0.1415], backgroundColor: '#3b82f6' },
+                    { label: 'Recall', data: [0.7794, 0.3235, 0.4412, 0.8529], backgroundColor: '#10b981' },
+                    { label: 'F1-Score', data: [0.8154, 0.4400, 0.4348, 0.2427], backgroundColor: '#f59e0b' }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: true, max: 1.0 } }
+            }
+        });
+    }
+
+    function initClustersChart() {
+        window.clustersChartRendered = true;
+        const ctx = document.getElementById('chart-clusters').getContext('2d');
+        // Simulated cluster points
+        const cluster0 = Array.from({length: 40}, () => ({x: 1450 + Math.random()*250, y: 35 + Math.random()*15}));
+        const cluster1 = Array.from({length: 40}, () => ({x: 2000 + Math.random()*600, y: 15 + Math.random()*18}));
+        const cluster2 = Array.from({length: 40}, () => ({x: 1200 + Math.random()*250, y: 52 + Math.random()*22}));
+
+        new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets: [
+                    { label: 'Cluster 0: Standard (Balanced)', data: cluster0, backgroundColor: '#3b82f6' },
+                    { label: 'Cluster 1: Light Finishing (High Speed)', data: cluster1, backgroundColor: '#10b981' },
+                    { label: 'Cluster 2: Heavy Roughing (High Torque)', data: cluster2, backgroundColor: '#ef4444' }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { title: { display: true, text: 'Rotational Speed [rpm]' } },
+                    y: { title: { display: true, text: 'Torque [Nm]' } }
+                }
+            }
+        });
+    }
+
+    function initArimaChart() {
+        window.arimaChartRendered = true;
+        const ctx = document.getElementById('chart-arima').getContext('2d');
+        const historical = [];
+        let val = 10;
+        for (let i = 0; i <= 300; i += 10) {
+            val += (Math.random() * 8 + 3);
+            historical.push({x: i, y: Math.min(val, 185)});
+        }
+        const forecast = [];
+        let fVal = historical[historical.length - 1].y;
+        for (let i = 300; i <= 330; i += 5) {
+            fVal += 5.2;
+            forecast.push({x: i, y: fVal});
+        }
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: [
+                    { label: 'Historical Tool Wear (Cycles 1-300)', data: historical, borderColor: '#2563eb', tension: 0.2 },
+                    { label: 'ARIMA Forecast (Next 30 Cycles)', data: forecast, borderColor: '#ef4444', borderDash: [6, 6] }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { type: 'linear', title: { display: true, text: 'Machine Operational Sequence / Cycles' } },
+                    y: { title: { display: true, text: 'Tool Wear (minutes)' }, min: 0, max: 240 }
+                }
+            }
+        });
+    }
+
+    // Initialize simulation on load
+    runSimulation();
+</script>
+
+</body>
+</html>

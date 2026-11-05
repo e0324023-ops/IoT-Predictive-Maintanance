@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.env
+venv/
+env/
+ENV/
+
+# Internal scratch & temporary files
+scratch/
+*.log
+
+# Academic reports & Word/PDF templates (Excluded per user request)
+*.docx
+*.pdf
+~*
+DM_REPORT*
+DM_Report*
+
+# College branding & raw screenshots
+university_logo.png
+Screenshot*.png
+Screenshot*.jpg
+cropped_images/
+
+# Loose root copies (neatly organized under assets/)
+/cell_*.png
+/dash_*.png
+/pipeline_architecture.png
